@@ -19,7 +19,7 @@
 2. **VGG16**  
 3. **ResNet50**  
 4. **InceptionV3**  
-5. **MobileNet** (reimplemented as MobileNetV2)  
+5. **MobileNetV2**  
 6. **Improved CNN**: MobileNetV2 + Squeeze‑and‑Excitation (SE) block  
 
 ---
@@ -27,7 +27,7 @@
 ## Methodology
 
 1. **Transfer Learning**  
-   - Initialized all networks with ImageNet‑pretrained weights (including AlexNet in PyTorch)  
+   - Initialized all networks with ImageNet‑pretrained weights 
    - Replaced final FC layer for 7‑class output  
    - Fine‑tuned *all* layers using a low learning rate (1×10⁻⁴) and dropout (p=0.5)  
 
