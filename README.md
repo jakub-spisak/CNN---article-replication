@@ -44,7 +44,7 @@
 
 4. **Training Protocol**  
    - Optimizer: Adam  
-   - Epochs: 50  
+   - Epochs: 20/50  
    - Dropout: p = 0.5  
    - Image normalization based on dataset-wide mean and std  
    - Backbone freezing improved SE module stability  
