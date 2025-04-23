@@ -4,12 +4,13 @@
 
 - **Source**: Public ore image dataset from Kaggle  
 - **Size**: 957 images  
-- **Classes**: 7 ore/mineral types  
+- **Classes**: 7 ore/mineral types (e.g., Malachite, Biotite, etc.)  
 - **Splits**:
   - Training: 60%  
   - Validation: 20%  
-  - Test: 20%
-- **Site**: https://www.kaggle.com/datasets/asiedubrempong/minerals-identification-dataset
+  - Test: 20%  
+- **Note**: Moderate class imbalance observed (e.g., Malachite: 235, Biotite: 68)  
+- **Site**: [Kaggle Dataset](https://www.kaggle.com/datasets/asiedubrempong/minerals-identification-dataset)
 
 ---
 
@@ -19,51 +20,60 @@
 2. **VGG16**  
 3. **ResNet50**  
 4. **InceptionV3**  
-5. **MobileNetV2**  
-6. **Improved CNN**: MobileNetV2 + Squeeze‑and‑Excitation (SE) block  
+5. **MobileNetV2** *(used instead of MobileNetV1 due to availability in PyTorch)*  
+6. **Improved CNN**: MobileNetV2 + Squeeze-and-Excitation (SE) block  
 
 ---
 
 ## Methodology
 
-1. **Transfer Learning**  
-   - Initialized all networks with ImageNet‑pretrained weights 
-   - Replaced final FC layer for 7‑class output  
-   - Fine‑tuned *all* layers using a low learning rate (1×10⁻⁴) and dropout (p=0.5)  
+1. **Transfer Learning (TL)**  
+   - Used ImageNet-pretrained weights  
+   - Final FC layer replaced with 7-class classifier  
+   - Fine-tuned all layers with a low learning rate (1×10⁻⁴)  
 
-2. **Data Augmentation**  
-   - Random horizontal & vertical flips  
-   - Random resized crops / scaling (0.8–1.2×)  
-   - Small rotations (±20°)  
-   - Color jitter (±20% brightness/contrast)  
-   - Expanded training set ~5× (4 augmented variants per image)  
+2. **Data Augmentation (DA)**  
+   - Techniques: center & edge crops, zoom (0.8–1.2×), color jitter (±20%), etc.  
+   - Each training image expanded into 5 versions  
+   - Improved robustness against lighting, background, and scale variance  
 
 3. **SE Attention Module**  
-   - Inserted one Squeeze‑and‑Excitation block after the MobileNetV2 feature extractor  
-   - Bottleneck FC layers with reduction ratio *r*=8  
-   - Channel‑wise reweighting before final classifier  
+   - SE block applied to MobileNetV2 output  
+   - Reduction ratio *r* = 8  
+   - Recalibrated channel-wise features before final classification  
 
-4. **Training Details**  
-   - Optimizer: Adam, lr = 1×10⁻⁴  
+4. **Training Protocol**  
+   - Optimizer: Adam  
    - Epochs: 50  
-   - Hardware: NVIDIA GPU workstation  
+   - Dropout: p = 0.5  
+   - Image normalization based on dataset-wide mean and std  
+   - Backbone freezing improved SE module stability  
 
 ---
 
 ## Results
 
-| Model                    | Test Accuracy | Precision | Recall | F1‑Score |
-|--------------------------|--------------:|----------:|-------:|---------:|
-| AlexNet                  | 80.0 %        | 0.80      | 0.80   | 0.80     |
-| VGG16                    | 83.0 %        | 0.83      | 0.83   | 0.83     |
-| ResNet50                 | 87.0 %        | 0.87      | 0.87   | 0.87     |
-| InceptionV3              | 85.0 %        | 0.85      | 0.85   | 0.85     |
-| MobileNetV2              | 94.0 %        | 0.94      | 0.94   | 0.94     |
-| MobileNetV2 + SENet (SE) | 96.9 %        | 0.97      | 0.97   | 0.97     |
+| Model                    | Test Accuracy |
+|--------------------------|--------------:|
+| AlexNet (TL + DA)        | 85.9 %        |
+| VGG16 (TL + DA)          | 83.2 %        |
+| ResNet50 (TL + DA)       | 88.0 %        |
+| InceptionV3 (TL + DA)    | 88.0 %        |
+| MobileNetV2 (TL + DA)    | 90.6 %        |
+| MobileNetV2 + SE (Frozen)| 93.2 %        |
+| MobileNetV2 + SE (Full FT)| 90.1 %       |
 
 - **Key Findings**:  
-  - Transfer learning + augmentation dramatically improved all models over scratch training.  
-  - MobileNetV2 outperformed heavier architectures on this small dataset.  
-  - Adding an SE block to MobileNetV2 boosted accuracy from ~94 % to ~96.9 %.  
-  - Learning curves showed rapid convergence (≈95 % validation accuracy by epoch 20).  
-  - Confusion matrix analysis confirmed high per‑class performance with only minor off‑diagonal errors.  
+  - TL + DA significantly improved generalization and stability  
+  - MobileNetV2 achieved top performance among base models  
+  - SE block added ~2.6% accuracy boost over MobileNetV2 alone  
+  - Freezing MobileNetV2 backbone for initial epochs enhanced SE performance  
+  - Confusion matrices show strong class-level precision and low inter-class confusion  
+
+---
+
+## Notes and Extensions
+
+- The original study used **MobileNetV1** with ~96.89% reported accuracy; this work used **MobileNetV2** (PyTorch)  
+- Class imbalance and lighting variability required aggressive augmentation  
+- Future work includes trying CBAM attention, model ensembling, and AutoAugment  
